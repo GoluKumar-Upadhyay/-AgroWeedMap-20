@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import cv2
 import numpy as np
 from PIL import Image
-
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from werkzeug.utils import secure_filename
