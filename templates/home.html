@@ -1,1375 +1,1308 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Crop & Weed Identification System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* ===== CSS VARIABLES ===== */
-        :root {
-            --primary-green: #2e7d32;
-            --light-green: #53de58;
-            --lighter-green: #b4d6b7;
-            --text-dark: #333333;
-            --text-light: #666666;
-            --background: #f9f9f9;
-            --white: #ffffff;
-            --shadow: rgba(0, 0, 0, 0.08);
-            --shadow-hover: rgba(0, 0, 0, 0.12);
-            --border: #e0e0e0;
-            --success: #4caf50;
-            --warning: #ff9800;
-            --error: #f44336;
-        }
-
-        /* ===== BASE STYLES ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--background);
-            color: var(--text-dark);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* ===== HEADER STYLES ===== */
-        header {
-            background-color: var(--white);
-            box-shadow: 0 4px 12px var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 700;
-            font-size: 1.8rem;
-            color: var(--primary-green);
-        }
-
-        .logo-icon {
-            background-color: var(--lighter-green);
-            color: var(--primary-green);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 30px;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: 500;
-            transition: color 0.3s;
-            padding: 5px 0;
-            position: relative;
-        }
-
-        nav a:hover {
-            color: var(--primary-green);
-        }
-
-        nav a.active {
-            color: var(--primary-green);
-        }
-
-        nav a.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: var(--primary-green);
-            border-radius: 3px;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--primary-green);
-            cursor: pointer;
-        }
-
-        /* ===== HERO SECTION ===== */
-        .hero {
-            padding: 80px 0 60px;
-            background: linear-gradient(135deg, var(--white) 0%, var(--lighter-green) 100%);
-        }
-
-        .hero-content {
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .hero h1 {
-            font-size: 2.8rem;
-            color: var(--text-dark);
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-light);
-            margin-bottom: 40px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .highlight {
-            color: var(--primary-green);
-            font-weight: 600;
-        }
-
-        /* ===== MAIN CONTENT ===== */
-        .main-content {
-            padding: 60px 0 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.2rem;
-            color: var(--text-dark);
-            margin-bottom: 10px;
-        }
-
-        .section-subtitle {
-            text-align: center;
-            color: var(--text-light);
-            margin-bottom: 50px;
-            max-width: 600px;
-        }
-
-        /* ===== UPLOAD SECTION ===== */
-        .upload-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            width: 100%;
-            max-width: 1200px;
-            margin-bottom: 60px;
-        }
-
-        @media (max-width: 992px) {
-            .upload-section {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .upload-container {
-            background-color: var(--white);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px var(--shadow);
-            padding: 40px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            height: fit-content;
-        }
-
-        .upload-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px var(--shadow-hover);
-        }
-
-        .upload-title {
-            font-size: 1.8rem;
-            color: var(--text-dark);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .upload-instruction {
-            color: var(--text-light);
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 1.1rem;
-        }
-
-        .upload-area {
-            border: 3px dashed var(--border);
-            border-radius: 12px;
-            padding: 50px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 30px;
-            background-color: var(--lighter-green);
-        }
-
-        .upload-area:hover {
-            border-color: var(--primary-green);
-            background-color: rgba(76, 175, 80, 0.05);
-        }
-
-        .upload-area.dragover {
-            border-color: var(--primary-green);
-            background-color: rgba(76, 175, 80, 0.1);
-            transform: scale(1.01);
-        }
-
-        .upload-icon {
-            font-size: 4rem;
-            color: var(--primary-green);
-            margin-bottom: 20px;
-        }
-
-        .upload-text {
-            font-size: 1.3rem;
-            color: var(--text-dark);
-            margin-bottom: 10px;
-        }
-
-        .upload-subtext {
-            color: var(--text-light);
-            margin-bottom: 20px;
-        }
-
-        .upload-btn {
-            background-color: var(--primary-green);
-            color: white;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .upload-btn:hover {
-            background-color: var(--light-green);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .file-info {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: var(--lighter-green);
-            display: none;
-        }
-
-        .file-info.active {
-            display: block;
-        }
-
-        .file-name {
-            font-weight: 600;
-            color: var(--primary-green);
-            margin-bottom: 5px;
-        }
-
-        .file-size {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        /* ===== TIPS CONTAINER ===== */
-        .tips-container {
-            background-color: var(--white);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px var(--shadow);
-            padding: 40px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            height: fit-content;
-        }
-
-        .tips-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px var(--shadow-hover);
-        }
-
-        .tips-title {
-            font-size: 1.8rem;
-            color: var(--text-dark);
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .tips-list {
-            list-style: none;
-        }
-
-        .tip-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 25px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid var(--lighter-green);
-        }
-
-        .tip-item:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .tip-icon {
-            background-color: var(--lighter-green);
-            color: var(--primary-green);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            margin-right: 20px;
-            flex-shrink: 0;
-        }
-
-        .tip-content h4 {
-            color: var(--text-dark);
-            margin-bottom: 8px;
-            font-size: 1.2rem;
-        }
-
-        .tip-content p {
-            color: var(--text-light);
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-
-        /* ===== ERROR MESSAGE ===== */
-        .error-message {
-            background-color: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .error-message.active {
-            display: flex;
-        }
-
-        /* ===== RESULT CONTAINER ===== */
-        .result-container {
-            background-color: var(--white);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px var(--shadow);
-            padding: 40px;
-            margin-top: 40px;
-            display: none;
-        }
-
-        .result-container.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--lighter-green);
-        }
-
-        .result-title {
-            font-size: 1.8rem;
-            color: var(--primary-green);
-        }
-
-        .confidence-badge {
-            background-color: var(--lighter-green);
-            color: var(--primary-green);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .result-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-
-        @media (max-width: 992px) {
-            .result-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .result-image-container {
-            text-align: center;
-        }
-
-        .result-image {
-            max-width: 100%;
-            max-height: 400px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px var(--shadow);
-            margin-bottom: 20px;
-            object-fit: contain;
-        }
-
-        .result-details {
-            padding: 20px;
-        }
-
-        .plant-name {
-            font-size: 2.2rem;
-            color: var(--text-dark);
-            margin-bottom: 10px;
-        }
-
-        .scientific-name {
-            font-size: 1.3rem;
-            color: var(--text-light);
-            margin-bottom: 30px;
-            font-style: italic;
-        }
-
-        .detail-item {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--lighter-green);
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .detail-value {
-            color: var(--text-light);
-            font-size: 1.1rem;
-        }
-
-        .unknown-plant {
-            color: var(--warning) !important;
-        }
-
-        /* ===== TOP PREDICTIONS ===== */
-        .top-predictions {
-            margin-top: 30px;
-        }
-
-        .prediction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
-            background-color: var(--lighter-green);
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-green);
-            transition: transform 0.2s;
-        }
-
-        .prediction-item:hover {
-            transform: translateX(5px);
-        }
-
-        .prediction-info {
-            flex: 1;
-        }
-
-        .prediction-name {
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .prediction-scientific {
-            font-size: 0.9rem;
-            color: var(--text-light);
-            font-style: italic;
-        }
-
-        .prediction-confidence {
-            font-weight: 600;
-            color: var(--primary-green);
-        }
-
-        /* ===== LOADING OVERLAY ===== */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid var(--lighter-green);
-            border-top-color: var(--primary-green);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            margin-top: 20px;
-            color: var(--primary-green);
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        /* ===== FEATURES SECTION ===== */
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            width: 100%;
-            max-width: 1200px;
-            margin-top: 40px;
-        }
-
-        .feature-card {
-            background-color: var(--white);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 5px 15px var(--shadow);
-            transition: transform 0.3s;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-        }
-
-        .feature-icon {
-            background-color: var(--lighter-green);
-            color: var(--primary-green);
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-        }
-
-        .feature-title {
-            font-size: 1.4rem;
-            color: var(--text-dark);
-            margin-bottom: 15px;
-        }
-
-        .feature-desc {
-            color: var(--text-light);
-        }
-
-        /* ===== FOOTER ===== */
-        footer {
-            background-color: var(--white);
-            border-top: 1px solid var(--border);
-            padding: 50px 0 30px;
-            margin-top: 40px;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .footer-column {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .footer-logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-green);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .footer-desc {
-            color: var(--text-light);
-            margin-bottom: 20px;
-        }
-
-        .footer-title {
-            font-size: 1.2rem;
-            color: var(--text-dark);
-            margin-bottom: 20px;
-        }
-
-        .footer-links {
-            list-style: none;
-        }
-
-        .footer-links li {
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .footer-links a {
-            color: var(--text-light);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: var(--primary-green);
-        }
-
-        .social-icons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .social-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--lighter-green);
-            color: var(--primary-green);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .social-icon:hover {
-            background-color: var(--primary-green);
-            color: white;
-            transform: translateY(-3px);
-        }
-
-        .copyright {
-            text-align: center;
-            color: var(--text-light);
-            padding-top: 30px;
-            border-top: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-
-        /* ===== RESPONSIVE STYLES ===== */
-        @media (max-width: 768px) {
-            .header-content {
-                padding: 15px 0;
-            }
-            
-            nav {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: var(--white);
-                box-shadow: 0 10px 20px var(--shadow);
-                padding: 20px;
-            }
-            
-            nav.active {
-                display: block;
-            }
-            
-            nav ul {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            .hero {
-                padding: 60px 0 40px;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .section-title {
-                font-size: 1.8rem;
-            }
-            
-            .upload-container, .tips-container {
-                padding: 30px 20px;
-            }
-            
-            .upload-area {
-                padding: 40px 20px;
-            }
-            
-            .result-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .hero h1 {
-                font-size: 1.8rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            .upload-text {
-                font-size: 1.1rem;
-            }
-            
-            .upload-btn {
-                padding: 12px 25px;
-                font-size: 1rem;
-            }
-            
-            .feature-card {
-                padding: 20px;
-            }
-            
-            .tip-item {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-            
-            .tip-icon {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
-            
-            .plant-name {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartCrop ID — Crop & Weed Identification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --sage:       #5a7a5a;
+      --sage-light: #8aaa8a;
+      --sage-pale:  #d6e8d6;
+      --sage-mist:  #eef5ee;
+      --earth:      #3d2f1f;
+      --sand:       #c8a96e;
+      --sand-light: #f0e4cc;
+      --cream:      #faf8f3;
+      --white:      #ffffff;
+      --shadow-sm:  0 2px 12px rgba(61,47,31,.08);
+      --shadow-md:  0 8px 32px rgba(61,47,31,.12);
+      --shadow-lg:  0 20px 60px rgba(61,47,31,.16);
+      --radius:     18px;
+      --radius-sm:  10px;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--cream);
+      color: var(--earth);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ── Decorative leaf pattern ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(90,122,90,.06) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(200,169,110,.07) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Header ── */
+    header {
+      background: rgba(250,248,243,.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(90,122,90,.15);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--sage) 0%, #3d6b3d 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 14px rgba(90,122,90,.35);
+    }
+
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--earth);
+      letter-spacing: -.01em;
+    }
+
+    .logo-text span { color: var(--sage); }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 36px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #6a5a4a;
+      font-size: .95rem;
+      font-weight: 500;
+      transition: color .25s;
+      position: relative;
+    }
+
+    nav a:hover, nav a.active { color: var(--sage); }
+
+    nav a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--sage);
+      border-radius: 2px;
+    }
+
+    .mobile-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--sage);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 90px 0 70px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, var(--sage-mist) 0%, var(--cream) 60%, var(--sand-light) 100%);
+      z-index: -1;
+    }
+
+    /* Decorative circles */
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(90,122,90,.12);
+      right: -120px;
+      top: -140px;
+    }
+
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(200,169,110,.2);
+      left: 60px;
+      bottom: -80px;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 60px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(90,122,90,.1);
+      color: var(--sage);
+      border: 1px solid rgba(90,122,90,.2);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: .8rem;
+      font-weight: 500;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--earth);
+      margin-bottom: 20px;
+      letter-spacing: -.02em;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--sage);
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: #6a5a4a;
+      max-width: 520px;
+      line-height: 1.75;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 36px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--sage);
+    }
+
+    .stat-lbl {
+      font-size: .82rem;
+      color: #8a7a6a;
+      margin-top: 2px;
+    }
+
+    .hero-badge {
+      background: white;
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      min-width: 200px;
+      flex-shrink: 0;
+      border: 1px solid var(--sage-pale);
+    }
+
+    .hero-badge-icon {
+      font-size: 3rem;
+      color: var(--sage);
+      margin-bottom: 12px;
+    }
+
+    .hero-badge-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--earth);
+      font-weight: 600;
+    }
+
+    .hero-badge-sub {
+      font-size: .85rem;
+      color: #8a7a6a;
+      margin-top: 6px;
+    }
+
+    /* ── Main ── */
+    main {
+      padding: 70px 0 100px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-label {
+      font-size: .8rem;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--sage-light);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--earth);
+      text-align: center;
+      margin-bottom: 10px;
+      letter-spacing: -.02em;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: #7a6a5a;
+      font-size: .98rem;
+      margin-bottom: 52px;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Upload Grid ── */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 60px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(90,122,90,.1);
+      padding: 40px;
+      transition: box-shadow .3s, transform .3s;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: var(--earth);
+      margin-bottom: 10px;
+    }
+
+    .card-sub {
+      font-size: .92rem;
+      color: #7a6a5a;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    /* ── Drop Zone ── */
+    .drop-zone {
+      border: 2px dashed rgba(90,122,90,.35);
+      border-radius: var(--radius-sm);
+      background: var(--sage-mist);
+      padding: 48px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(90,122,90,.08), transparent 70%);
+      pointer-events: none;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--sage);
+      background: rgba(90,122,90,.07);
+      transform: scale(1.01);
+    }
+
+    .drop-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--sage) 0%, #3d6b3d 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      color: white;
+      font-size: 1.6rem;
+      box-shadow: 0 6px 20px rgba(90,122,90,.3);
+    }
+
+    .drop-title {
+      font-weight: 500;
+      font-size: 1.05rem;
+      color: var(--earth);
+      margin-bottom: 6px;
+    }
+
+    .drop-sub {
+      font-size: .85rem;
+      color: #8a7a6a;
+      margin-bottom: 22px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: linear-gradient(135deg, var(--sage) 0%, #3d6b3d 100%);
+      color: white;
+      border: none;
+      padding: 13px 28px;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .3s;
+      box-shadow: 0 4px 14px rgba(90,122,90,.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(90,122,90,.4);
+    }
+
+    input[type="file"] { display: none; }
+
+    .file-info-bar {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+      padding: 13px 18px;
+      background: var(--sage-mist);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--sage-pale);
+    }
+
+    .file-info-bar.show { display: flex; }
+
+    .file-info-bar i { color: var(--sage); font-size: 1.1rem; }
+
+    .file-name-text {
+      font-weight: 500;
+      font-size: .9rem;
+      color: var(--earth);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-size-text {
+      font-size: .82rem;
+      color: #8a7a6a;
+    }
+
+    /* ── Tips ── */
+    .tips-list { list-style: none; }
+
+    .tip-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--sage-mist);
+    }
+
+    .tip-row:last-child { border-bottom: none; }
+
+    .tip-icon-wrap {
+      width: 42px;
+      height: 42px;
+      background: var(--sage-mist);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sage);
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .tip-body h4 { font-size: .95rem; font-weight: 500; color: var(--earth); margin-bottom: 3px; }
+    .tip-body p  { font-size: .87rem; color: #7a6a5a; line-height: 1.55; }
+
+    /* ── Error ── */
+    .error-banner {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: #fff1f1;
+      border: 1px solid #f5c6c6;
+      color: #b91c1c;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 28px;
+      font-size: .92rem;
+    }
+
+    .error-banner.show { display: flex; }
+
+    /* ── Results ── */
+    .results-card {
+      display: none;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(90,122,90,.12);
+      overflow: hidden;
+      margin-bottom: 70px;
+      animation: slideUp .45s cubic-bezier(.22,1,.36,1);
+    }
+
+    .results-card.show { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 36px;
+      background: linear-gradient(135deg, var(--sage-mist) 0%, var(--sand-light) 100%);
+      border-bottom: 1px solid rgba(90,122,90,.12);
+    }
+
+    .results-header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--earth);
+    }
+
+    .confidence-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      border: 1px solid rgba(90,122,90,.3);
+      color: var(--sage);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: .92rem;
+    }
+
+    .confidence-pill i { font-size: .8rem; }
+
+    .results-body {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 0;
+    }
+
+    .result-image-panel {
+      padding: 36px;
+      border-right: 1px solid var(--sage-mist);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 20px;
+    }
+
+    .result-img {
+      width: 100%;
+      max-height: 340px;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .img-meta {
+      font-size: .82rem;
+      color: #8a7a6a;
+      text-align: center;
+      background: var(--sage-mist);
+      padding: 8px 16px;
+      border-radius: 8px;
+      width: 100%;
+    }
+
+    .result-info-panel {
+      padding: 36px 40px;
+    }
+
+    /* Plant type badge */
+    .plant-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 14px;
+      border-radius: 50px;
+      font-size: .8rem;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .badge-crop { background: rgba(90,122,90,.12); color: var(--sage); border: 1px solid rgba(90,122,90,.25); }
+    .badge-weed { background: rgba(200,150,60,.12); color: #b87a20; border: 1px solid rgba(200,150,60,.25); }
+    .badge-unknown { background: rgba(100,100,100,.1); color: #666; border: 1px solid rgba(100,100,100,.2); }
+
+    .plant-name-big {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--earth);
+      line-height: 1.2;
+      margin-bottom: 6px;
+      letter-spacing: -.02em;
+    }
+
+    .plant-sci {
+      font-style: italic;
+      color: #8a7a6a;
+      font-size: 1rem;
+      margin-bottom: 30px;
+    }
+
+    .metric-row {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--sage-mist);
+    }
+
+    .metric-row:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .metric-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .82rem;
+      font-weight: 500;
+      color: #8a7a6a;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+
+    .metric-label i { color: var(--sage); }
+
+    .conf-track {
+      height: 8px;
+      background: var(--sage-mist);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .conf-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--sage) 0%, #3d6b3d 100%);
+      border-radius: 8px;
+      width: 0%;
+      transition: width .7s cubic-bezier(.22,1,.36,1);
+    }
+
+    .conf-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .conf-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--sage);
+    }
+
+    .entropy-chip {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: .82rem;
+      font-weight: 500;
+    }
+
+    .entropy-high    { background: rgba(90,122,90,.12);  color: var(--sage); }
+    .entropy-medium  { background: rgba(200,150,60,.12); color: #b87a20; }
+    .entropy-low     { background: rgba(180,50,50,.1);   color: #b91c1c; }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 24px;
+      margin-top: 52px;
+    }
+
+    .feature-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(90,122,90,.08);
+      transition: transform .3s, box-shadow .3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--sage), var(--sand));
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
+    .feature-card:hover::after { opacity: 1; }
+
+    .feature-icon-wrap {
+      width: 56px;
+      height: 56px;
+      background: var(--sage-mist);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sage);
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--earth);
+      margin-bottom: 10px;
+    }
+
+    .feature-desc { font-size: .9rem; color: #7a6a5a; line-height: 1.65; }
+
+    /* ── Loading Overlay ── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(250,248,243,.96);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      backdrop-filter: blur(6px);
+    }
+
+    .loading-overlay.show { display: flex; }
+
+    .spinner-wrap {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      margin-bottom: 24px;
+    }
+
+    .spinner-ring {
+      position: absolute;
+      inset: 0;
+      border: 3px solid var(--sage-pale);
+      border-top-color: var(--sage);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner-leaf {
+      position: absolute;
+      inset: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sage);
+      font-size: 1.4rem;
+    }
+
+    .loading-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--earth);
+      margin-bottom: 6px;
+    }
+
+    .loading-sub { font-size: .9rem; color: #8a7a6a; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--earth);
+      color: rgba(255,255,255,.75);
+      padding: 60px 0 32px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand .logo-text { color: white; font-size: 1.3rem; }
+    .footer-brand .logo-text span { color: var(--sage-light); }
+    .footer-brand p { font-size: .88rem; margin-top: 14px; line-height: 1.7; color: rgba(255,255,255,.6); }
+
+    .footer-col h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 18px;
+    }
+
+    .footer-links { list-style: none; }
+    .footer-links li { margin-bottom: 10px; }
+    .footer-links a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .88rem; transition: color .25s; }
+    .footer-links a:hover { color: var(--sage-light); }
+    .footer-links li span { font-size: .88rem; }
+
+    .socials { display: flex; gap: 12px; margin-top: 20px; }
+
+    .social-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.7);
+      text-decoration: none;
+      font-size: .9rem;
+      transition: all .25s;
+    }
+
+    .social-btn:hover { background: var(--sage); color: white; }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.1);
+      padding-top: 28px;
+      text-align: center;
+      font-size: .83rem;
+      color: rgba(255,255,255,.4);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .upload-grid      { grid-template-columns: 1fr; }
+      .results-body     { grid-template-columns: 1fr; }
+      .result-image-panel { border-right: none; border-bottom: 1px solid var(--sage-mist); }
+      .features-grid    { grid-template-columns: 1fr 1fr; }
+      .footer-grid      { grid-template-columns: 1fr 1fr; }
+      .hero-inner       { grid-template-columns: 1fr; }
+      .hero-badge       { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--cream); border-bottom: 1px solid var(--sage-pale); padding: 20px 24px; }
+      nav.open { display: block; }
+      nav ul { flex-direction: column; gap: 18px; }
+      .mobile-btn { display: block; }
+      .hero h1 { font-size: 2rem; }
+      .hero-stats { flex-wrap: wrap; gap: 20px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .card { padding: 28px 22px; }
+      .result-info-panel { padding: 28px 24px; }
+      .results-header { flex-direction: column; gap: 14px; align-items: flex-start; padding: 20px 24px; }
+    }
+  </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-leaf"></i>
-                    </div>
-                    <span>SmartCrop ID</span>
-                </div>
-                
-                <button class="mobile-menu-btn" id="mobileMenuBtn">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <nav id="mainNav">
-                    <ul>
-                        <li><a href="#" class="active">Home</a></li>
-                        <li><a href="#">How It Works</a></li>
-                        <li><a href="#">Plant Database</a></li>
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Smart Crop & Weed Identification System</h1>
-                <p>Empowering <span class="highlight">farmers</span> and <span class="highlight">students</span> with AI-powered plant recognition technology for better agricultural decisions</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <h2 class="section-title">Upload Plant Image</h2>
-            <p class="section-subtitle">Upload a clear image of the crop or weed plant for instant identification</p>
-            
-            <!-- Error Message -->
-            <div class="error-message" id="errorMessage">
-                <i class="fas fa-exclamation-circle"></i> <span id="errorText">Error message will appear here</span>
-            </div>
-            
-            <!-- Upload Section with Two Columns -->
-            <div class="upload-section">
-                <!-- Left Column: Upload Container -->
-                <div class="upload-container">
-                    <h3 class="upload-title">Identify Your Plant</h3>
-                    <p class="upload-instruction">Upload a clear image of a crop or weed plant, and our AI system will identify it for you.</p>
-                    
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div class="upload-text">Click to upload or drag and drop</div>
-                        <div class="upload-subtext">Supports JPG, PNG (Max 5MB)</div>
-                        <button class="upload-btn" id="uploadButton">
-                            <i class="fas fa-upload"></i> Choose File
-                        </button>
-                        <input type="file" id="fileInput" class="file-input" accept=".jpg,.jpeg,.png,.gif" />
-                    </div>
-                    
-                    <div class="file-info" id="fileInfo">
-                        <div class="file-name" id="fileName">No file selected</div>
-                        <div class="file-size" id="fileSize">File size: 0 MB</div>
-                    </div>
-                </div>
-                
-                <!-- Right Column: Tips for Best Results -->
-                <div class="tips-container">
-                    <h3 class="tips-title">Tips for Best Results</h3>
-                    <ul class="tips-list">
-                        <li class="tip-item">
-                            <div class="tip-icon">
-                                <i class="fas fa-sun"></i>
-                            </div>
-                            <div class="tip-content">
-                                <h4>Good Lighting</h4>
-                                <p>Take photos in natural daylight or well-lit conditions for clearer images.</p>
-                            </div>
-                        </li>
-                        <li class="tip-item">
-                            <div class="tip-icon">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <div class="tip-content">
-                                <h4>Clear Focus</h4>
-                                <p>Ensure the plant leaf is in sharp focus and fills most of the frame.</p>
-                            </div>
-                        </li>
-                        <li class="tip-item">
-                            <div class="tip-icon">
-                                <i class="fas fa-leaf"></i>
-                            </div>
-                            <div class="tip-content">
-                                <h4>Single Plant</h4>
-                                <p>Photograph one plant at a time to avoid confusion in identification.</p>
-                            </div>
-                        </li>
-                        <li class="tip-item">
-                            <div class="tip-icon">
-                                <i class="fas fa-expand-alt"></i>
-                            </div>
-                            <div class="tip-content">
-                                <h4>High Resolution</h4>
-                                <p>Use images at least 500x500 pixels for optimal AI recognition.</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Results Container -->
-            <div class="result-container" id="resultContainer">
-                <div class="result-header">
-                    <h3 class="result-title">Identification Results</h3>
-                    <div class="confidence-badge" id="confidenceBadge">95.2% Confidence</div>
-                </div>
-                
-                <div class="result-content">
-                    <div class="result-image-container">
-                        <img id="resultImage" src="" alt="Uploaded Plant" class="result-image">
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <i class="fas fa-info-circle"></i> Image Information
-                            </div>
-                            <div class="detail-value" id="imageInfo">Resolution: 0x0 | Size: 0 MB</div>
-                        </div>
-                    </div>
-                    
-                    <div class="result-details">
-                        <h2 class="plant-name" id="plantName">Waiting for prediction...</h2>
-                        <p class="scientific-name" id="scientificName">Scientific name will appear here</p>
-                        
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <i class="fas fa-check-circle"></i> Prediction Confidence
-                            </div>
-                            <div class="detail-value">
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <span id="confidenceValue">0%</span>
-                                    <div style="flex: 1; height: 20px; background-color: var(--lighter-green); border-radius: 10px; overflow: hidden;">
-                                        <div id="confidenceBar" style="height: 100%; background-color: var(--primary-green); width: 0%; border-radius: 10px; transition: width 0.5s ease;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <i class="fas fa-brain"></i> Model Certainty (Entropy)
-                            </div>
-                            <div class="detail-value" id="entropyValue">0.00 (Calculating...)</div>
-                        </div>
-                        
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <i class="fas fa-seedling"></i> Plant Type
-                            </div>
-                            <div class="detail-value" id="plantType">Unknown</div>
-                        </div>
-                        
-                        <!-- Top Predictions -->
-                        <!-- <div class="top-predictions">
-                            <h4 style="margin-bottom: 20px; color: var(--text-dark);">Alternative Predictions</h4>
-                            <div id="topPredictionsList">
-                               
-                            </div>
-                        </div> -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Features Section -->
-            <h2 class="section-title">How Our System Helps</h2>
-            <p class="section-subtitle">Advanced AI technology for agricultural innovation</p>
-            
-            <div class="features">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <h3 class="feature-title">AI-Powered Recognition</h3>
-                    <p class="feature-desc">Our advanced neural networks accurately identify crops and weeds with over 95% accuracy.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-seedling"></i>
-                    </div>
-                    <h3 class="feature-title">Crop Management Insights</h3>
-                    <p class="feature-desc">Get actionable recommendations for pest control, fertilization, and irrigation based on plant health.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <h3 class="feature-title">Educational Resources</h3>
-                    <p class="feature-desc">Comprehensive plant database with information on thousands of crop and weed species.</p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loading-text">Analyzing Image...</div>
+  <!-- ── Header ── -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a href="#" class="logo">
+          <div class="logo-mark"><i class="fas fa-leaf"></i></div>
+          <span class="logo-text">Smart<span>Crop</span> ID</span>
+        </a>
+        <button class="mobile-btn" id="mobileBtn"><i class="fas fa-bars"></i></button>
+        <nav id="mainNav">
+          <ul>
+            <li><a href="#" class="active">Home</a></li>
+            <li><a href="#">How It Works</a></li>
+            <li><a href="#">Plant Database</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
     </div>
+  </header>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <div class="footer-logo">
-                        <i class="fas fa-leaf"></i> SmartCrop ID
-                    </div>
-                    <p class="footer-desc">Empowering farmers and students with AI-powered plant recognition technology for better agricultural decisions.</p>
-                    <div class="social-icons">
-                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-column">
-                    <h3 class="footer-title">Quick Links</h3>
-                    <ul class="footer-links">
-                        <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
-                        <li><a href="#"><i class="fas fa-cogs"></i> How It Works</a></li>
-                        <li><a href="#"><i class="fas fa-database"></i> Plant Database</a></li>
-                        <li><a href="#"><i class="fas fa-file-alt"></i> Research Papers</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3 class="footer-title">Resources</h3>
-                    <ul class="footer-links">
-                        <li><a href="#"><i class="fas fa-book"></i> Farmer's Guide</a></li>
-                        <li><a href="#"><i class="fas fa-spray-can"></i> Weed Control Methods</a></li>
-                        <li><a href="#"><i class="fas fa-sync-alt"></i> Crop Rotation Tips</a></li>
-                        <li><a href="#"><i class="fas fa-graduation-cap"></i> Academic Resources</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3 class="footer-title">Contact Us</h3>
-                    <ul class="footer-links">
-                        <li><i class="fas fa-envelope"></i> gk192613@gmail.com</li>
-                        <li><i class="fas fa-phone"></i> +91 9135445880</li>
-                        <li><i class="fas fa-map-marker-alt"></i> India, Bihar, Purvi Champaran</li>
-                    </ul>
-                </div>
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-tag"><i class="fas fa-seedling"></i> AI-Powered Agriculture</div>
+          <h1>Identify Any Crop<br>or <em>Weed</em> Instantly</h1>
+          <p>Upload a plant photo and our deep learning model identifies it in seconds — helping farmers and students make smarter agricultural decisions.</p>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="stat-num">20+</div>
+              <div class="stat-lbl">Plant Species</div>
             </div>
-            
-            <div class="copyright">
-                <p>&copy; 2023 Smart Crop & Weed Identification System. All rights reserved.</p>
+            <div class="stat">
+              <div class="stat-num">95%</div>
+              <div class="stat-lbl">Accuracy</div>
             </div>
+            <div class="stat">
+              <div class="stat-num">&lt;3s</div>
+              <div class="stat-lbl">Analysis Time</div>
+            </div>
+          </div>
         </div>
-    </footer>
+        <div class="hero-badge">
+          <div class="hero-badge-icon"><i class="fas fa-microscope"></i></div>
+          <div class="hero-badge-title">EfficientNet Model</div>
+          <div class="hero-badge-sub">Trained on field images<br>from Indian farms</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <script>
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mainNav = document.getElementById('mainNav');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            mainNav.classList.toggle('active');
-            mobileMenuBtn.innerHTML = mainNav.classList.contains('active') 
-                ? '<i class="fas fa-times"></i>' 
-                : '<i class="fas fa-bars"></i>';
-        });
-        
-        // File upload functionality
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const uploadButton = document.getElementById('uploadButton');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const resultContainer = document.getElementById('resultContainer');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        
-        // Click on upload area or button to trigger file input
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
-        uploadButton.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent triggering the uploadArea click event
-            fileInput.click();
-        });
-        
-        // Handle file selection
-        fileInput.addEventListener('change', async function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                
-                // Check file size
-                if (fileSizeMB > 5) {
-                    showError('File size exceeds 5MB limit. Please choose a smaller file.');
-                    this.value = ''; // Clear the file input
-                    fileInfo.classList.remove('active');
-                    return;
-                }
-                
-                // Check file type
-                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                if (!validTypes.includes(file.type)) {
-                    showError('Only JPG, PNG and GIF files are allowed.');
-                    this.value = ''; // Clear the file input
-                    fileInfo.classList.remove('active');
-                    return;
-                }
-                
-                // Update file info display
-                fileName.textContent = file.name;
-                fileSize.textContent = `File size: ${fileSizeMB} MB`;
-                fileInfo.classList.add('active');
-                
-                // Show loading overlay
-                loadingOverlay.classList.add('active');
-                
-                try {
-                    // Create FormData for file upload
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    // Upload to Flask backend
-                    const response = await fetch('/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.error) {
-                        showError(result.error);
-                    } else {
-                        // Display results
-                        displayResults(result, file);
-                    }
-                } catch (error) {
-                    showError('Failed to upload file. Please try again. Error: ' + error.message);
-                    console.error('Upload error:', error);
-                } finally {
-                    // Hide loading overlay
-                    loadingOverlay.classList.remove('active');
-                }
-            }
-        });
-        
-        // Function to display results
-        function displayResults(result, file) {
-            // Hide any previous error
-            hideError();
-            
-            // Create object URL for image preview
-            const objectUrl = URL.createObjectURL(file);
-            const resultImage = document.getElementById('resultImage');
-            resultImage.src = objectUrl;
-            
-            // Set plant name
-            const plantName = document.getElementById('plantName');
-            plantName.textContent = result.prediction.label;
-            
-            if (result.prediction.is_unknown) {
-                plantName.classList.add('unknown-plant');
-            } else {
-                plantName.classList.remove('unknown-plant');
-            }
-            
-            // Set scientific name
-            document.getElementById('scientificName').textContent = result.prediction.scientific_name;
-            
-            // Set confidence
-            const confidence = result.prediction.confidence.toFixed(1);
-            document.getElementById('confidenceValue').textContent = `${confidence}%`;
-            document.getElementById('confidenceBadge').textContent = `${confidence}% Confidence`;
-            
-            // Update confidence bar with animation
-            const confidenceBar = document.getElementById('confidenceBar');
-            confidenceBar.style.width = '0%'; // Reset
-            setTimeout(() => {
-                confidenceBar.style.width = `${confidence}%`;
-            }, 100);
-            
-            // Set entropy
-            const entropy = result.prediction.entropy.toFixed(2);
-            let entropyText = `${entropy} `;
-            if (entropy < 0.5) entropyText += "(Very High Certainty)";
-            else if (entropy < 1.0) entropyText += "(High Certainty)";
-            else if (entropy < 1.5) entropyText += "(Moderate Certainty)";
-            else entropyText += "(Low Certainty)";
-            document.getElementById('entropyValue').textContent = entropyText;
-            
-            // Set plant type based on class
-            const plantType = document.getElementById('plantType');
-            const cropClasses = [7, 10, 11, 14, 19]; // Crop classes from your mapping
-            const weedClasses = [0, 1, 2, 3, 4, 5, 6, 8, 9, 12, 13, 15, 16, 17, 18]; // Weed classes
-            
-            if (cropClasses.includes(result.prediction.class_id)) {
-                plantType.textContent = "Crop Plant";
-                plantType.style.color = "var(--primary-green)";
-            } else if (weedClasses.includes(result.prediction.class_id)) {
-                plantType.textContent = "Weed Plant";
-                plantType.style.color = "var(--warning)";
-            } else {
-                plantType.textContent = "Unknown Plant";
-                plantType.style.color = "var(--text-light)";
-            }
-            
-            // Set image info
-            const imageInfo = document.getElementById('imageInfo');
-            // Create image to get dimensions
-            const img = new Image();
-            img.onload = function() {
-                imageInfo.textContent = `Resolution: ${this.width}x${this.height} | Size: ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
-            };
-            img.src = objectUrl;
-            
-            // // Display top predictions
-            // const topPredictionsList = document.getElementById('topPredictionsList');
-            // topPredictionsList.innerHTML = '';
-            
-            // if (result.top_predictions && result.top_predictions.length > 0) {
-            //     result.top_predictions.forEach((pred, index) => {
-            //         const predElement = document.createElement('div');
-            //         predElement.className = 'prediction-item';
-            //         predElement.innerHTML = `
-            //             <div class="prediction-info">
-            //                 <div class="prediction-name">${pred.name}</div>
-            //                 <div class="prediction-scientific">${pred.scientific_name}</div>
-            //             </div>
-            //             <div class="prediction-confidence">${pred.confidence.toFixed(1)}%</div>
-            //         `;
-            //         topPredictionsList.appendChild(predElement);
-            //     });
-            // } else {
-            //     topPredictionsList.innerHTML = '<p style="color: var(--text-light); text-align: center;">No alternative predictions available</p>';
-            // }
-            
-            // Show result container
-            resultContainer.classList.add('active');
-            
-            // Scroll to results
-            setTimeout(() => {
-                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 300);
+  <!-- ── Main ── -->
+  <main>
+    <div class="container">
+      <div class="section-label">Plant Recognition</div>
+      <h2 class="section-title">Upload a Plant Image</h2>
+      <p class="section-sub">Get an instant identification with confidence score and plant classification</p>
+
+      <!-- Error Banner -->
+      <div class="error-banner" id="errorBanner">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorText">Something went wrong.</span>
+      </div>
+
+      <!-- Upload Grid -->
+      <div class="upload-grid">
+
+        <!-- Upload Card -->
+        <div class="card">
+          <h3 class="card-title">Identify Your Plant</h3>
+          <p class="card-sub">Upload a clear image of a crop or weed and our AI model will identify it for you.</p>
+
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="drop-title">Drop your image here</div>
+            <div class="drop-sub">or click to browse — JPG, PNG up to 5 MB</div>
+            <button class="btn-primary" id="chooseBtn" type="button">
+              <i class="fas fa-folder-open"></i> Choose File
+            </button>
+            <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif" />
+          </div>
+
+          <div class="file-info-bar" id="fileInfoBar">
+            <i class="fas fa-image"></i>
+            <span class="file-name-text" id="fileNameText">—</span>
+            <span class="file-size-text" id="fileSizeText">—</span>
+          </div>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card">
+          <h3 class="card-title">Tips for Best Results</h3>
+          <p class="card-sub">Follow these guidelines to maximise identification accuracy.</p>
+          <ul class="tips-list">
+            <li class="tip-row">
+              <div class="tip-icon-wrap"><i class="fas fa-sun"></i></div>
+              <div class="tip-body">
+                <h4>Good Lighting</h4>
+                <p>Take photos in natural daylight or well-lit conditions for clearer images.</p>
+              </div>
+            </li>
+            <li class="tip-row">
+              <div class="tip-icon-wrap"><i class="fas fa-camera"></i></div>
+              <div class="tip-body">
+                <h4>Clear Focus</h4>
+                <p>Ensure the leaf or plant is sharp and fills most of the frame.</p>
+              </div>
+            </li>
+            <li class="tip-row">
+              <div class="tip-icon-wrap"><i class="fas fa-leaf"></i></div>
+              <div class="tip-body">
+                <h4>Single Plant</h4>
+                <p>Photograph one plant at a time to avoid confusion in identification.</p>
+              </div>
+            </li>
+            <li class="tip-row">
+              <div class="tip-icon-wrap"><i class="fas fa-expand-alt"></i></div>
+              <div class="tip-body">
+                <h4>High Resolution</h4>
+                <p>Use images at least 500×500 px for optimal recognition accuracy.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ── Results ── -->
+      <div class="results-card" id="resultsCard">
+        <div class="results-header">
+          <div class="results-header-title"><i class="fas fa-dna" style="color:var(--sage);margin-right:10px"></i>Identification Results</div>
+          <div class="confidence-pill" id="confidencePill"><i class="fas fa-check-circle"></i> <span id="pillText">—</span></div>
+        </div>
+
+        <div class="results-body">
+          <!-- Image Panel -->
+          <div class="result-image-panel">
+            <img id="resultImg" class="result-img" src="" alt="Uploaded plant" />
+            <div class="img-meta" id="imgMeta">—</div>
+          </div>
+
+          <!-- Info Panel -->
+          <div class="result-info-panel">
+            <div class="plant-type-badge" id="plantTypeBadge"></div>
+
+            <div class="plant-name-big" id="plantNameBig">—</div>
+            <div class="plant-sci" id="plantSci">—</div>
+
+            <!-- Confidence -->
+            <div class="metric-row">
+              <div class="metric-label"><i class="fas fa-chart-bar"></i> Prediction Confidence</div>
+              <div class="conf-row">
+                <span class="conf-value" id="confValue">0%</span>
+              </div>
+              <div class="conf-track"><div class="conf-fill" id="confFill"></div></div>
+            </div>
+
+            <!-- Entropy -->
+            <div class="metric-row">
+              <div class="metric-label"><i class="fas fa-brain"></i> Model Certainty</div>
+              <span class="entropy-chip" id="entropyChip">—</span>
+            </div>
+
+            <!-- Plant Type -->
+            <div class="metric-row">
+              <div class="metric-label"><i class="fas fa-seedling"></i> Classification</div>
+              <span id="plantTypeText" style="font-weight:500;font-size:.95rem;">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── How Our System Helps ── -->
+      <div class="section-label">Capabilities</div>
+      <h2 class="section-title">How Our System Helps</h2>
+      <p class="section-sub">Advanced deep learning built specifically for Indian agricultural conditions</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-wrap"><i class="fas fa-robot"></i></div>
+          <div class="feature-title">AI-Powered Recognition</div>
+          <p class="feature-desc">Our EfficientNet model accurately identifies 20 crop and weed species with over 95% accuracy on field images.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap"><i class="fas fa-seedling"></i></div>
+          <div class="feature-title">Crop vs. Weed Detection</div>
+          <p class="feature-desc">Automatically classifies each plant as a crop or weed, helping farmers decide on targeted herbicide application.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap"><i class="fas fa-graduation-cap"></i></div>
+          <div class="feature-title">Educational Insights</div>
+          <p class="feature-desc">Scientific names, plant types, and confidence scores help students and researchers learn plant morphology quickly.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Loading Overlay ── -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-wrap">
+      <div class="spinner-ring"></div>
+      <div class="spinner-leaf"><i class="fas fa-leaf"></i></div>
+    </div>
+    <div class="loading-title">Analysing Image…</div>
+    <div class="loading-sub">Running AI model, please wait</div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-mark" style="background:rgba(255,255,255,.15);box-shadow:none;"><i class="fas fa-leaf"></i></div>
+            <span class="logo-text">Smart<span>Crop</span> ID</span>
+          </div>
+          <p>Empowering farmers and students with AI-powered plant recognition technology for better agricultural decisions.</p>
+          <div class="socials">
+            <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">How It Works</a></li>
+            <li><a href="#">Plant Database</a></li>
+            <li><a href="#">Research Papers</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul class="footer-links">
+            <li><a href="#">Farmer's Guide</a></li>
+            <li><a href="#">Weed Control Methods</a></li>
+            <li><a href="#">Crop Rotation Tips</a></li>
+            <li><a href="#">Academic Resources</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Contact Us</h4>
+          <ul class="footer-links">
+            <li><span><i class="fas fa-envelope" style="margin-right:8px;opacity:.6"></i>gk192613@gmail.com</span></li>
+            <li><span><i class="fas fa-phone" style="margin-right:8px;opacity:.6"></i>+91 9135445880</span></li>
+            <li><span><i class="fas fa-map-marker-alt" style="margin-right:8px;opacity:.6"></i>Bihar, Purvi Champaran, India</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        &copy; 2025 Smart Crop &amp; Weed Identification System. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Mobile nav ── */
+    document.getElementById('mobileBtn').addEventListener('click', () => {
+      const nav = document.getElementById('mainNav');
+      nav.classList.toggle('open');
+    });
+
+    /* ── DOM refs ── */
+    const dropZone      = document.getElementById('dropZone');
+    const fileInput     = document.getElementById('fileInput');
+    const chooseBtn     = document.getElementById('chooseBtn');
+    const fileInfoBar   = document.getElementById('fileInfoBar');
+    const fileNameText  = document.getElementById('fileNameText');
+    const fileSizeText  = document.getElementById('fileSizeText');
+    const errorBanner   = document.getElementById('errorBanner');
+    const errorText     = document.getElementById('errorText');
+    const loadingOverlay= document.getElementById('loadingOverlay');
+    const resultsCard   = document.getElementById('resultsCard');
+
+    /* ── Open file picker ── */
+    dropZone.addEventListener('click', () => fileInput.click());
+    chooseBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+
+    /* ── Drag & drop ── */
+    ['dragenter','dragover','dragleave','drop'].forEach(ev =>
+      dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); })
+    );
+    ['dragenter','dragover'].forEach(ev =>
+      dropZone.addEventListener(ev, () => dropZone.classList.add('dragover'))
+    );
+    ['dragleave','drop'].forEach(ev =>
+      dropZone.addEventListener(ev, () => dropZone.classList.remove('dragover'))
+    );
+    dropZone.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      if (files.length) { fileInput.files = files; fileInput.dispatchEvent(new Event('change')); }
+    });
+
+    /* ── File selected ── */
+    fileInput.addEventListener('change', async function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      /* Validate */
+      const sizeMB = file.size / 1048576;
+      if (sizeMB > 5) { showError('File size exceeds 5 MB. Please choose a smaller image.'); this.value=''; return; }
+      if (!['image/jpeg','image/jpg','image/png','image/gif'].includes(file.type)) {
+        showError('Only JPG, PNG or GIF files are accepted.'); this.value=''; return;
+      }
+
+      /* Show file info */
+      fileNameText.textContent = file.name;
+      fileSizeText.textContent = sizeMB.toFixed(2) + ' MB';
+      fileInfoBar.classList.add('show');
+
+      hideError();
+      loadingOverlay.classList.add('show');
+
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+
+        const res  = await fetch('/upload', { method:'POST', body: fd });
+        const data = await res.json();
+
+        if (data.error) {
+          showError(data.error);
+        } else {
+          renderResults(data, file);
         }
-        
-        // Error handling functions
-        function showError(message) {
-            errorText.textContent = message;
-            errorMessage.classList.add('active');
-            
-            // Hide results if showing
-            resultContainer.classList.remove('active');
-            
-            // Scroll to error
-            setTimeout(() => {
-                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
-        
-        function hideError() {
-            errorMessage.classList.remove('active');
-        }
-        
-        // Drag and drop functionality
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-            uploadArea.classList.add('dragover');
-        }
-        
-        function unhighlight() {
-            uploadArea.classList.remove('dragover');
-        }
-        
-        uploadArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            
-            if (files.length > 0) {
-                fileInput.files = files;
-                // Trigger the change event manually
-                const event = new Event('change');
-                fileInput.dispatchEvent(event);
-            }
-        }
-        
-        // Add smooth scrolling for navigation links
-        document.querySelectorAll('nav a').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                const targetId = this.getAttribute('href');
-                if (targetId && targetId !== '#') {
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
-                
-                // Close mobile menu if open
-                if (mainNav.classList.contains('active')) {
-                    mainNav.classList.remove('active');
-                    mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            });
-        });
-        
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('nav') && !e.target.closest('.mobile-menu-btn') && mainNav.classList.contains('active')) {
-                mainNav.classList.remove('active');
-                mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            }
-        });
-    </script>
+      } catch (err) {
+        showError('Upload failed: ' + err.message);
+      } finally {
+        loadingOverlay.classList.remove('show');
+      }
+    });
+
+    /* ── Render results ── */
+    function renderResults(data, file) {
+      const p = data.prediction;   // { label, scientific_name, confidence, entropy, class_id, is_unknown, plant_type }
+
+      /* Image */
+      const objUrl = URL.createObjectURL(file);
+      document.getElementById('resultImg').src = objUrl;
+
+      /* Image meta */
+      const img = new Image();
+      img.onload = () => {
+        document.getElementById('imgMeta').textContent =
+          `${img.width}×${img.height} px  ·  ${(file.size/1048576).toFixed(2)} MB`;
+      };
+      img.src = objUrl;
+
+      /* Plant type badge */
+      const badge = document.getElementById('plantTypeBadge');
+      if (p.plant_type === 'Crop Plant') {
+        badge.className = 'plant-type-badge badge-crop';
+        badge.innerHTML = '<i class="fas fa-seedling"></i> Crop Plant';
+      } else if (p.plant_type === 'Weed Plant') {
+        badge.className = 'plant-type-badge badge-weed';
+        badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Weed Plant';
+      } else {
+        badge.className = 'plant-type-badge badge-unknown';
+        badge.innerHTML = '<i class="fas fa-question-circle"></i> Unknown Plant';
+      }
+
+      /* Names */
+      document.getElementById('plantNameBig').textContent = p.label;
+      document.getElementById('plantSci').textContent     = p.scientific_name;
+
+      /* Confidence */
+      const conf = p.confidence.toFixed(1);
+      document.getElementById('confValue').textContent  = conf + '%';
+      document.getElementById('pillText').textContent   = conf + '% Confidence';
+      const fill = document.getElementById('confFill');
+      fill.style.width = '0%';
+      setTimeout(() => { fill.style.width = conf + '%'; }, 80);
+
+      /* Entropy */
+      const ent  = p.entropy;
+      const chip = document.getElementById('entropyChip');
+      let eLabel, eClass;
+      if (ent < 0.5)      { eLabel = 'Very High Certainty'; eClass = 'entropy-high'; }
+      else if (ent < 1.0) { eLabel = 'High Certainty';      eClass = 'entropy-high'; }
+      else if (ent < 1.5) { eLabel = 'Moderate Certainty';  eClass = 'entropy-medium'; }
+      else                { eLabel = 'Low Certainty';        eClass = 'entropy-low'; }
+      chip.textContent  = `${ent.toFixed(2)} — ${eLabel}`;
+      chip.className    = `entropy-chip ${eClass}`;
+
+      /* Classification text */
+      document.getElementById('plantTypeText').textContent = p.plant_type;
+
+      /* Show card & scroll */
+      resultsCard.classList.add('show');
+      setTimeout(() => resultsCard.scrollIntoView({ behavior:'smooth', block:'start' }), 200);
+    }
+
+    /* ── Error helpers ── */
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBanner.classList.add('show');
+      resultsCard.classList.remove('show');
+      setTimeout(() => errorBanner.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+    }
+
+    function hideError() {
+      errorBanner.classList.remove('show');
+    }
+
+    /* ── Close mobile nav on outside click ── */
+    document.addEventListener('click', e => {
+      const nav = document.getElementById('mainNav');
+      if (!e.target.closest('nav') && !e.target.closest('.mobile-btn') && nav.classList.contains('open')) {
+        nav.classList.remove('open');
+      }
+    });
+  </script>
 </body>
 </html>

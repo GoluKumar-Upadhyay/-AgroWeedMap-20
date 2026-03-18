@@ -250,33 +250,35 @@ def get_model():
 
 # Class labels
 class_map = {
-    0: ("Bermuda grass", "Cynodon dactylon"),
-    1: ("Boerhavia erecta", "Boerhavia erecta"),
-    2: ("Broadleaf plantain", "Plantago major"),
-    3: ("Cannabis sativa", "Cannabis sativa"),
-    4: ("Chenopodium album", "Bathua"),
-    5: ("Common cocklebur", "Xanthium strumarium"),
-    6: ("Creeping woodsorrel", "Oxalis corniculata"),
-    7: ("Coriander", "Coriandrum sativum"),
-    8: ("Goosegrass", "Eleusine indica"),
-    9: ("Launaea", "Launaea sarmentosa"),
-    10: ("Maize", "Zea mays"),
-    11: ("Mustard", "Brassica juncea"),
-    12: ("Parthenium", "Parthenium hysterophorus"),
-    13: ("Pigweed", "Amaranthus"),
-    14: ("Potato", "Solanum tuberosum"),
-    15: ("Spurge", "Euphorbia"),
-    16: ("Nutsedge", "Cyperus rotundus"),
-    17: ("Sesbania", "Sesbania"),
-    18: ("Sowthistle", "Sonchus"),
-    19: ("Tomato", "Solanum lycopersicum")
+    0:  ("Bermuda grass",     "Cynodon dactylon"),
+    1:  ("Boerhavia erecta",  "Boerhavia erecta"),
+    2:  ("Broadleaf plantain","Plantago major"),
+    3:  ("Cannabis sativa",   "Cannabis sativa"),
+    4:  ("Chenopodium album", "Bathua"),
+    5:  ("Common cocklebur",  "Xanthium strumarium"),
+    6:  ("Creeping woodsorrel","Oxalis corniculata"),
+    7:  ("Coriander",         "Coriandrum sativum"),
+    8:  ("Goosegrass",        "Eleusine indica"),
+    9:  ("Launaea",           "Launaea sarmentosa"),
+    10: ("Maize",             "Zea mays"),
+    11: ("Mustard",           "Brassica juncea"),
+    12: ("Parthenium",        "Parthenium hysterophorus"),
+    13: ("Pigweed",           "Amaranthus"),
+    14: ("Potato",            "Solanum tuberosum"),
+    15: ("Spurge",            "Euphorbia"),
+    16: ("Nutsedge",          "Cyperus rotundus"),
+    17: ("Sesbania",          "Sesbania"),
+    18: ("Sowthistle",        "Sonchus"),
+    19: ("Tomato",            "Solanum lycopersicum")
 }
 
-# Check allowed file
+# Crop vs weed classification
+CROP_CLASSES = {7, 10, 11, 14, 19}   # Coriander, Maize, Mustard, Potato, Tomato
+WEED_CLASSES  = {0,1,2,3,4,5,6,8,9,12,13,15,16,17,18}
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-# Prediction function
 def predict_image(image_path):
     try:
         model_instance = get_model()
@@ -291,29 +293,49 @@ def predict_image(image_path):
         with tf.device('/CPU:0'):
             preds = model_instance.predict(img_array, verbose=0)[0]
 
-        pred_idx = int(np.argmax(preds))
+        pred_idx   = int(np.argmax(preds))
         confidence = float(preds[pred_idx] * 100)
 
+        # Shannon entropy for uncertainty estimation
+        epsilon = 1e-10
+        entropy = float(-np.sum(preds * np.log(preds + epsilon)))
+
         label, sci = class_map.get(pred_idx, ("Unknown", "Unknown"))
+        is_unknown  = confidence < 50.0
+
+        if pred_idx in CROP_CLASSES:
+            plant_type = "Crop Plant"
+        elif pred_idx in WEED_CLASSES:
+            plant_type = "Weed Plant"
+        else:
+            plant_type = "Unknown Plant"
 
         del img_array
         gc.collect()
 
         return {
             "success": True,
-            "label": label,
-            "scientific_name": sci,
-            "confidence": confidence
+            "prediction": {
+                "label":           label,
+                "scientific_name": sci,
+                "confidence":      confidence,
+                "entropy":         entropy,
+                "class_id":        pred_idx,
+                "is_unknown":      is_unknown,
+                "plant_type":      plant_type
+            }
         }
 
     except Exception as e:
         print("🔥 Prediction Error:", str(e))
         return {"error": str(e)}
 
-# Routes
+
+# ── Routes ──────────────────────────────────────────────────────────────────
+
 @app.route('/')
 def index():
-    return render_template('home.html')  # ensure this file exists
+    return render_template('home.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -327,11 +349,11 @@ def upload_file():
             return jsonify({"error": "Empty filename"}), 400
 
         if not allowed_file(file.filename):
-            return jsonify({"error": "Invalid file type"}), 400
+            return jsonify({"error": "Invalid file type. Only JPG, PNG, GIF allowed."}), 400
 
-        filename = secure_filename(file.filename)
+        filename    = secure_filename(file.filename)
         unique_name = f"{uuid.uuid4().hex}_{filename}"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+        filepath    = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
 
         file.save(filepath)
 
@@ -341,11 +363,10 @@ def upload_file():
             return jsonify(result), 500
 
         result["file_url"] = f"/uploads/{unique_name}"
-
         return jsonify(result)
 
     except Exception as e:
-        print(" Upload Error:", str(e))
+        print("Upload Error:", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>')
@@ -355,11 +376,10 @@ def uploaded_file(filename):
 @app.route('/health')
 def health():
     return jsonify({
-        "status": "running",
+        "status":       "running",
         "model_loaded": model is not None
     })
 
-# Run locally (Render uses gunicorn)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
