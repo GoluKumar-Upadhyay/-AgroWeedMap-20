@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import cv2
 import numpy as np
 from PIL import Image
-import tensorflow as tf
+
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from werkzeug.utils import secure_filename
@@ -32,9 +32,9 @@ MODEL_PATH = "best_20class_farming_model.keras"
 model = None
 try:
     model = load_model(MODEL_PATH, compile=False)
-    print("✅ Model Loaded Successfully")
+    print(" Model Loaded Successfully")
 except Exception as e:
-    print(f"❌ Error loading model: {e}")
+    print(f" Error loading model: {e}")
     model = None
 
 
@@ -132,7 +132,7 @@ def predict_image(image_path, conf_threshold=75, entropy_threshold=1.2):
         
         
         if confidence < conf_threshold or entropy > entropy_threshold:
-            final_label = "Unknown Plant ❓"
+            final_label = "Unknown Plant "
             final_scientific = "Not in trained categories"
             is_unknown = True
         else:
