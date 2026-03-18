@@ -234,15 +234,19 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Load model ONCE
+# Model path
 MODEL_PATH = "best_20class_farming_model.keras"
+
+# Lazy load model
 model = None
 
-try:
-    model = load_model(MODEL_PATH, compile=False)
-    print("✅ Model Loaded Successfully")
-except Exception as e:
-    print("❌ Model Load Error:", str(e))
+def get_model():
+    global model
+    if model is None:
+        print("⏳ Loading model...")
+        model = load_model(MODEL_PATH, compile=False)
+        print("✅ Model loaded")
+    return model
 
 # Class labels
 class_map = {
@@ -275,8 +279,7 @@ def allowed_file(filename):
 # Prediction function
 def predict_image(image_path):
     try:
-        if model is None:
-            return {"error": "Model not loaded"}
+        model_instance = get_model()
 
         img = Image.open(image_path).convert("RGB")
         img = img.resize((224, 224))
@@ -286,7 +289,7 @@ def predict_image(image_path):
         img_array = np.expand_dims(img_array, axis=0)
 
         with tf.device('/CPU:0'):
-            preds = model.predict(img_array, verbose=0)[0]
+            preds = model_instance.predict(img_array, verbose=0)[0]
 
         pred_idx = int(np.argmax(preds))
         confidence = float(preds[pred_idx] * 100)
@@ -310,7 +313,7 @@ def predict_image(image_path):
 # Routes
 @app.route('/')
 def index():
-    return render_template('home.html')
+    return render_template('home.html')  # ensure this file exists
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -342,7 +345,7 @@ def upload_file():
         return jsonify(result)
 
     except Exception as e:
-        print("🔥 Upload Error:", str(e))
+        print(" Upload Error:", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>')
@@ -356,7 +359,7 @@ def health():
         "model_loaded": model is not None
     })
 
-# For local run ONLY (safe for Render too)
+# Run locally (Render uses gunicorn)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
