@@ -222,6 +222,7 @@ from werkzeug.utils import secure_filename
 # Force CPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+# Create app
 app = Flask(__name__)
 
 # Config
@@ -229,7 +230,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
 
-# Ensure folder exists
+# Ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
@@ -267,15 +268,16 @@ class_map = {
     19: ("Tomato", "Solanum lycopersicum")
 }
 
+# Check allowed file
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+# Prediction function
 def predict_image(image_path):
     try:
         if model is None:
             return {"error": "Model not loaded"}
 
-        # Load & preprocess image (LIGHTWEIGHT)
         img = Image.open(image_path).convert("RGB")
         img = img.resize((224, 224))
 
@@ -283,7 +285,6 @@ def predict_image(image_path):
         img_array = preprocess_input(img_array)
         img_array = np.expand_dims(img_array, axis=0)
 
-        # Prediction (CPU safe)
         with tf.device('/CPU:0'):
             preds = model.predict(img_array, verbose=0)[0]
 
@@ -292,7 +293,6 @@ def predict_image(image_path):
 
         label, sci = class_map.get(pred_idx, ("Unknown", "Unknown"))
 
-        # Cleanup memory
         del img_array
         gc.collect()
 
@@ -307,6 +307,7 @@ def predict_image(image_path):
         print("🔥 Prediction Error:", str(e))
         return {"error": str(e)}
 
+# Routes
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -314,8 +315,6 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     try:
-        print("📥 Upload request received")
-
         if 'file' not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
 
@@ -332,7 +331,6 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
 
         file.save(filepath)
-        print("✅ File saved:", filepath)
 
         result = predict_image(filepath)
 
@@ -358,6 +356,7 @@ def health():
         "model_loaded": model is not None
     })
 
+# For local run ONLY (safe for Render too)
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
