@@ -207,11 +207,11 @@
 # if __name__ == '__main__':
 #     port = int(os.environ.get("PORT", 5000))  
 #     app.run(debug=True, host='0.0.0.0', port=port)
-
 import os
 import uuid
 import gc
 from flask import Flask, render_template, request, jsonify, send_from_directory
+import cv2
 import numpy as np
 from PIL import Image
 import tensorflow as tf
@@ -219,89 +219,98 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from werkzeug.utils import secure_filename
 
-# Force CPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-# Create app
 app = Flask(__name__)
-
-# Config
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
-# Ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Model path
 MODEL_PATH = "best_20class_farming_model.keras"
-
-# Lazy load model
 model = None
 
 def get_model():
     global model
     if model is None:
-        print("⏳ Loading model...")
+        print("Loading model...")
         model = load_model(MODEL_PATH, compile=False)
-        print("✅ Model loaded")
+        print("Model loaded")
     return model
 
-# Class labels
 class_map = {
-    0:  ("Bermuda grass",     "Cynodon dactylon"),
-    1:  ("Boerhavia erecta",  "Boerhavia erecta"),
-    2:  ("Broadleaf plantain","Plantago major"),
-    3:  ("Cannabis sativa",   "Cannabis sativa"),
-    4:  ("Chenopodium album", "Bathua"),
-    5:  ("Common cocklebur",  "Xanthium strumarium"),
-    6:  ("Creeping woodsorrel","Oxalis corniculata"),
-    7:  ("Coriander",         "Coriandrum sativum"),
-    8:  ("Goosegrass",        "Eleusine indica"),
-    9:  ("Launaea",           "Launaea sarmentosa"),
-    10: ("Maize",             "Zea mays"),
-    11: ("Mustard",           "Brassica juncea"),
-    12: ("Parthenium",        "Parthenium hysterophorus"),
-    13: ("Pigweed",           "Amaranthus"),
-    14: ("Potato",            "Solanum tuberosum"),
-    15: ("Spurge",            "Euphorbia"),
-    16: ("Nutsedge",          "Cyperus rotundus"),
-    17: ("Sesbania",          "Sesbania"),
-    18: ("Sowthistle",        "Sonchus"),
-    19: ("Tomato",            "Solanum lycopersicum")
+    0:  ("Bermuda grass",       "Cynodon dactylon"),
+    1:  ("Boerhavia erecta",    "Boerhavia erecta"),
+    2:  ("Broadleaf plantain",  "Plantago major"),
+    3:  ("Cannabis sativa",     "Cannabis sativa"),
+    4:  ("Chenopodium album",   "Bathua / Lamb's quarters"),
+    5:  ("Common cocklebur",    "Xanthium strumarium"),
+    6:  ("Creeping woodsorrel", "Oxalis corniculata"),
+    7:  ("Dhaniya (Coriander)", "Coriandrum sativum"),
+    8:  ("Goosegrass",          "Eleusine indica"),
+    9:  ("Launaea",             "Launaea sarmentosa"),
+    10: ("Maize",               "Zea mays"),
+    11: ("Mustard",             "Brassica juncea"),
+    12: ("Parthenium",          "Parthenium hysterophorus"),
+    13: ("Pigweed Amaranthus",  "Amaranthus spp."),
+    14: ("Potato",              "Solanum tuberosum"),
+    15: ("Prostrate spurge",    "Euphorbia prostrata"),
+    16: ("Purple nutsedge",     "Cyperus rotundus"),
+    17: ("Sesbania",            "Sesbania bispinosa"),
+    18: ("Sowthistle",          "Sonchus oleraceus"),
+    19: ("Tomato",              "Solanum lycopersicum")
 }
 
-# Crop vs weed classification
-CROP_CLASSES = {7, 10, 11, 14, 19}   # Coriander, Maize, Mustard, Potato, Tomato
+CROP_CLASSES = {7, 10, 11, 14, 19}
 WEED_CLASSES  = {0,1,2,3,4,5,6,8,9,12,13,15,16,17,18}
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+def apply_clahe_rgb(image):
+    image = np.array(image).astype("uint8")
+    lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    l = clahe.apply(l)
+    lab = cv2.merge((l, a, b))
+    image = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+    return image.astype("float32")
 
-def predict_image(image_path):
+def softmax_temperature(probs, T=3.0):
+    logits = np.log(probs + 1e-9)
+    exp_logits = np.exp(logits / T)
+    return exp_logits / np.sum(exp_logits)
+
+def prediction_entropy(probs):
+    return -np.sum(probs * np.log(probs + 1e-9))
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def predict_image(image_path, conf_threshold=75, entropy_threshold=1.2):
     try:
-        model_instance = get_model()
+        m = get_model()
 
         img = Image.open(image_path).convert("RGB")
-        img = img.resize((224, 224))
+        img_resized = img.resize((224, 224))
 
-        img_array = np.array(img).astype("float32")
+        img_array = apply_clahe_rgb(img_resized)
         img_array = preprocess_input(img_array)
         img_array = np.expand_dims(img_array, axis=0)
 
         with tf.device('/CPU:0'):
-            preds = model_instance.predict(img_array, verbose=0)[0]
+            raw_preds = m.predict(img_array, verbose=0)[0]
+
+        preds = softmax_temperature(raw_preds, T=3.0)
 
         pred_idx   = int(np.argmax(preds))
         confidence = float(preds[pred_idx] * 100)
+        entropy    = float(prediction_entropy(preds))
 
-        # Shannon entropy for uncertainty estimation
-        epsilon = 1e-10
-        entropy = float(-np.sum(preds * np.log(preds + epsilon)))
-
-        label, sci = class_map.get(pred_idx, ("Unknown", "Unknown"))
-        is_unknown  = confidence < 50.0
+        # Always return the real prediction — frontend handles unknown case
+        label, scientific = class_map[pred_idx]
+        is_unknown = confidence < conf_threshold or entropy > entropy_threshold
 
         if pred_idx in CROP_CLASSES:
             plant_type = "Crop Plant"
@@ -317,7 +326,7 @@ def predict_image(image_path):
             "success": True,
             "prediction": {
                 "label":           label,
-                "scientific_name": sci,
+                "scientific_name": scientific,
                 "confidence":      confidence,
                 "entropy":         entropy,
                 "class_id":        pred_idx,
@@ -327,11 +336,9 @@ def predict_image(image_path):
         }
 
     except Exception as e:
-        print("🔥 Prediction Error:", str(e))
+        print("Prediction error:", str(e))
         return {"error": str(e)}
 
-
-# ── Routes ──────────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -344,17 +351,14 @@ def upload_file():
             return jsonify({"error": "No file uploaded"}), 400
 
         file = request.files['file']
-
         if file.filename == '':
             return jsonify({"error": "Empty filename"}), 400
-
         if not allowed_file(file.filename):
-            return jsonify({"error": "Invalid file type. Only JPG, PNG, GIF allowed."}), 400
+            return jsonify({"error": "Invalid file type"}), 400
 
         filename    = secure_filename(file.filename)
         unique_name = f"{uuid.uuid4().hex}_{filename}"
         filepath    = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
-
         file.save(filepath)
 
         result = predict_image(filepath)
@@ -366,7 +370,6 @@ def upload_file():
         return jsonify(result)
 
     except Exception as e:
-        print("Upload Error:", str(e))
         return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>')
@@ -375,10 +378,7 @@ def uploaded_file(filename):
 
 @app.route('/health')
 def health():
-    return jsonify({
-        "status":       "running",
-        "model_loaded": model is not None
-    })
+    return jsonify({"status": "running", "model_loaded": model is not None})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))

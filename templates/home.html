@@ -712,25 +712,24 @@
       loadingOverlay.classList.add('show');
 
       try {
-        const fd = new FormData();
-        fd.append('file', file);
-        const res  = await fetch('/upload', { method:'POST', body:fd });
-        const data = await res.json();
+  const fd = new FormData();
+  fd.append('file', file);
+  const res  = await fetch('/upload', { method:'POST', body:fd });
+  const data = await res.json();
 
-        if (data.error) {
-          showWarn('Upload Error', `Something went wrong: <strong>${data.error}</strong>`, false);
-        } else if (data.prediction.confidence < 40) {
-          // Unrecognised plant → show warning with full list
-          showWarn(
-            'Plant Not Recognised',
-            `Our model could <strong>not confidently identify</strong> this plant (confidence: <strong>${data.prediction.confidence.toFixed(1)}%</strong>).<br><br>
-             It may not be one of the 20 supported species. Please upload a clear image of one of the plants listed below:`,
-            true
-          );
-        } else {
-          renderResults(data, file);
-        }
-      } catch (err) {
+  if (data.error) {
+    showWarn('Upload Error', `Something went wrong: <strong>${data.error}</strong>`, false);
+  } else if (data.prediction.is_unknown) {
+    showWarn(
+      'Plant Not Recognised',
+      `Our model could <strong>not confidently identify</strong> this image (confidence: <strong>${data.prediction.confidence.toFixed(1)}%</strong>).<br><br>
+       This may not be one of the 20 supported plant species. Please upload a clear photo of one of the plants listed below:`,
+      true
+    );
+  } else {
+    renderResults(data, file);
+  }
+} catch (err) {
         showWarn('Connection Error', `Failed to reach the server: <strong>${err.message}</strong>. Please try again.`, false);
       } finally {
         loadingOverlay.classList.remove('show');
