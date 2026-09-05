@@ -50,7 +50,7 @@ Weeds compete with crops for light, water, and nutrients, and manual field ident
 | EfficientNetB1 (no attention) | ~6.9 M | 99.90% | 0.9990 | 1.0000 | n/b |
 | **🌟 Proposed: EfficientNetB1 + CBAM** | **8.85 M** | **99.98%** | **0.9998** | **1.0000** | **107.5 ms/img** |
 
-
+</div>
 
 **Why this matters, not just the accuracy number:** the proposed model uses **63.3% fewer parameters than ResNet50** and is **24.1% faster** on unbatched CPU inference — a meaningfully better accuracy-per-parameter trade-off, even though all three models sit near the accuracy ceiling of this dataset (see [honest limitations](#-honest-limitations) before treating 99.98% as proof of generalisation).
 
@@ -80,14 +80,12 @@ All errors occur between visually similar species pairs: 2× Potato→Tomato, 1�
 <div align="center">
 <img width="857" height="701" alt="image" src="https://github.com/user-attachments/assets/1a7f3e77-4569-4ead-b279-18d6318934f8" />
 
+</div>
 </details>
-
-
 
 ---
 
 ## 🧬 Proposed Architecture
-
 
 ```
 Input (224×224×3)
