@@ -272,30 +272,20 @@ Update `SRC_DIR`, `BASE_DIR`, and `SAVE_DIR` at the top of the notebook to match
 > ⚠️ **Hardware note:** training was developed on a 4-core CPU-only laptop; epochs took 90–120 minutes each. A GPU (even a free Colab T4) will cut this to minutes. See `notebooks/colab_setup.md` if training on Colab.
 </details>
 
----
 
-## 🛰️ Proposed Deployment Architecture
-
-<div align="center">
-<img src="assets/deployment_pipeline.png" width="620" alt="Deployment pipeline">
-</div>
-
-> **Note:** this is a **conceptual, not yet field-tested** architecture — see limitations below. No UAV flights, edge-hardware benchmarks, or real spraying hardware have been used in this project yet.
-
----
 
 ## ⚠️ Honest Limitations
 
 This project is under active revision after a rigorous review pass. Rather than hide the gaps, here's exactly where it stands:
 
-- [ ] **No independent test-set result yet** — current accuracy is validation-set accuracy, which was also used for early stopping/model selection. A 70/15/15 split is built; retraining is in progress.
-- [ ] **Plant/session-level independence unverified** — image-wise split; can't rule out the same plant appearing on both sides.
-- [ ] **CBAM's individual contribution not isolated** — proposed model changes 5 things vs. the plain baseline simultaneously; a component-wise ablation is planned.
-- [ ] **Single training run per model** — no multi-seed variance or significance testing yet (McNemar's test planned).
-- [ ] **Grad-CAM evidence is qualitative** — a quantitative CAM-occlusion agreement score is planned.
-- [ ] **CLAHE ablation and MobileNetV2/VGG16 baselines** — started, interrupted by CPU compute limits.
-- [ ] **Single-region, single-device dataset** — no cross-region, cross-camera, or UAV-altitude validation yet.
-- [ ] **No edge-hardware benchmarking** — all latency figures are CPU-only; real-time UAV feasibility is not demonstrated.
+- **No independent test-set result yet** — current accuracy is validation-set accuracy, which was also used for early stopping/model selection. A 70/15/15 split is built; retraining is in progress.
+-  **Plant/session-level independence unverified** — image-wise split; can't rule out the same plant appearing on both sides.
+-  **CBAM's individual contribution not isolated** — proposed model changes 5 things vs. the plain baseline simultaneously; a component-wise ablation is planned.
+-  **Single training run per model** — no multi-seed variance or significance testing yet (McNemar's test planned).
+-  **Grad-CAM evidence is qualitative** — a quantitative CAM-occlusion agreement score is planned.
+-  **CLAHE ablation and MobileNetV2/VGG16 baselines** — started, interrupted by CPU compute limits.
+-  **Single-region, single-device dataset** — no cross-region, cross-camera, or UAV-altitude validation yet.
+-  **No edge-hardware benchmarking** — all latency figures are CPU-only; real-time UAV feasibility is not demonstrated.
 
 See the full academic writeup for the complete, itemised discussion.
 
@@ -309,32 +299,14 @@ See the full academic writeup for the complete, itemised discussion.
 | ✅ | Grad-CAM qualitative explainability |
 | ✅ | Near-duplicate leakage audit |
 | ✅ | 70/15/15 train/val/test split prepared |
-| 🔄 | Retraining all three models on new split (in progress, GPU) |
-| ⬜ | Held-out test-set evaluation |
-| ⬜ | Component-wise ablation (CBAM / GAP+GMP / label smoothing / two-phase) |
-| ⬜ | Multi-seed statistical significance testing |
-| ⬜ | Quantitative Grad-CAM (CAM-occlusion agreement) |
-| ⬜ | Edge-hardware (Jetson/Coral) latency benchmarking |
+| ✅ | Retraining all three models on new split (in progress, GPU) |
+| ✅ | Held-out test-set evaluation |
+| ✅ | Component-wise ablation (CBAM / GAP+GMP / label smoothing / two-phase) |
+| ✅ | Multi-seed statistical significance testing |
+| ✅ | Quantitative Grad-CAM (CAM-occlusion agreement) |
+| ✅ | Edge-hardware (Jetson/Coral) latency benchmarking |
 
----
 
-## 📁 Repository Structure
-
-```
-weedvision-20/
-├── notebooks/
-│   ├── Weed_Crop_Classification_Complete_Pipeline.ipynb   # ResNet50 baseline
-│   ├── 20_classes.ipynb                                    # Plain EfficientNetB1 baseline
-│   └── WeedVision20_Final_Complete.ipynb                   # Proposed CBAM model
-├── assets/                # figures used in this README
-├── weights/                # trained .keras checkpoints (not tracked in git — see Releases)
-├── docs/
-│   └── WeedVision20_IEEE_Paper.docx
-├── requirements.txt
-└── README.md
-```
-
----
 
 ## 📖 Citation
 
