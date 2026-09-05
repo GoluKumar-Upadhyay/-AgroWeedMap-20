@@ -50,11 +50,7 @@ Weeds compete with crops for light, water, and nutrients, and manual field ident
 | EfficientNetB1 (no attention) | ~6.9 M | 99.90% | 0.9990 | 1.0000 | n/b |
 | **🌟 Proposed: EfficientNetB1 + CBAM** | **8.85 M** | **99.98%** | **0.9998** | **1.0000** | **107.5 ms/img** |
 
-</div>
 
-<div align="center">
-<img src="assets/model_comparison.png" width="720" alt="Model comparison chart">
-</div>
 
 **Why this matters, not just the accuracy number:** the proposed model uses **63.3% fewer parameters than ResNet50** and is **24.1% faster** on unbatched CPU inference — a meaningfully better accuracy-per-parameter trade-off, even though all three models sit near the accuracy ceiling of this dataset (see [honest limitations](#-honest-limitations) before treating 99.98% as proof of generalisation).
 
@@ -62,7 +58,8 @@ Weeds compete with crops for light, water, and nutrients, and manual field ident
 <summary>📈 <b>Confusion matrix</b> — only 4 misclassifications across 20,000 validation images</summary>
 <br>
 <div align="center">
-<img src="assets/confusion_matrix.png" width="620" alt="Confusion matrix">
+<img width="1126" height="989" alt="image" src="https://github.com/user-attachments/assets/044f7af3-3eda-4484-b843-d46cda0920dd" />
+
 </div>
 
 All errors occur between visually similar species pairs: 2× Potato→Tomato, 1× Chenopodium album→Potato, 1× Goosegrass→Bermuda.
@@ -72,7 +69,8 @@ All errors occur between visually similar species pairs: 2× Potato→Tomato, 1�
 <summary>📊 <b>Per-class precision / recall / F1</b></summary>
 <br>
 <div align="center">
-<img src="assets/per_class_metrics.png" width="620" alt="Per-class metrics">
+<img width="1390" height="590" alt="image" src="https://github.com/user-attachments/assets/c343da56-5995-4c3f-9172-8a18ea2e4429" />
+
 </div>
 </details>
 
@@ -80,25 +78,16 @@ All errors occur between visually similar species pairs: 2× Potato→Tomato, 1�
 <summary>📉 <b>ROC-AUC curves (one-vs-rest, 20 classes)</b></summary>
 <br>
 <div align="center">
-<img src="assets/roc_curves.png" width="620" alt="ROC curves">
-</div>
+<img width="857" height="701" alt="image" src="https://github.com/user-attachments/assets/1a7f3e77-4569-4ead-b279-18d6318934f8" />
+
 </details>
 
-<details>
-<summary>🔬 <b>Error / confidence analysis</b></summary>
-<br>
-<div align="center">
-<img src="assets/error_analysis.png" width="620" alt="Error analysis">
-</div>
-</details>
+
 
 ---
 
 ## 🧬 Proposed Architecture
 
-<div align="center">
-<img src="assets/architecture.png" width="420" alt="WeedVision-20 architecture">
-</div>
 
 ```
 Input (224×224×3)
@@ -144,7 +133,8 @@ Loss: categorical cross-entropy with **label smoothing (ε=0.05)** to prevent ov
 ## 🔍 Explainability: Grad-CAM
 
 <div align="center">
-<img src="assets/gradcam.png" width="620" alt="Grad-CAM visualizations">
+<img width="1129" height="2749" alt="image" src="https://github.com/user-attachments/assets/ebc2163b-5423-4f9d-9421-ecbd9eabf79b" />
+
 </div>
 
 Grad-CAM is computed on the **CBAM-refined feature map** (not the raw backbone output), so the heat-map reflects what the attention mechanism itself prioritises. Across sampled classes, activation concentrates on **leaf blade, margin, and venation** — not background soil — which is the qualitative signature expected if CBAM is doing its job.
